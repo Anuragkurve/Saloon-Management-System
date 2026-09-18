@@ -38,6 +38,7 @@ import {
   MarketingCampaign,
   Invoice
 } from './types';
+import { SalonDatabaseExport } from './utils/offlineBackup';
 
 export default function App() {
   // Navigation
@@ -478,6 +479,21 @@ export default function App() {
     setCampaigns((prev) => [newCamp, ...prev]);
   };
 
+  const handleRestoreDatabase = (data: SalonDatabaseExport['data']) => {
+    if (data.customers && Array.isArray(data.customers)) setCustomers(data.customers);
+    if (data.staffList && Array.isArray(data.staffList)) setStaffList(data.staffList);
+    if (data.receptionists && Array.isArray(data.receptionists)) setReceptionists(data.receptionists);
+    if (data.servicesList && Array.isArray(data.servicesList)) setServicesList(data.servicesList);
+    if (data.ledgerItems && Array.isArray(data.ledgerItems)) setLedgerItems(data.ledgerItems);
+    if (data.campaigns && Array.isArray(data.campaigns)) setCampaigns(data.campaigns);
+    if (data.invoices && Array.isArray(data.invoices)) setInvoices(data.invoices);
+    setToastMessage({
+      title: 'Salon Database Restored',
+      desc: 'All clients, appointments, invoices, and staff records loaded successfully from local file.',
+      type: 'success',
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex flex-col lg:flex-row w-full overflow-x-hidden">
       {/* Sleek Dark Brand Sidebar */}
@@ -630,9 +646,17 @@ export default function App() {
           {activeTab === 'settings' && (
             <SettingsView
               servicesList={servicesList}
+              customers={customers}
+              staffList={staffList}
+              receptionists={receptionists}
+              ledgerItems={ledgerItems}
+              campaigns={campaigns}
+              invoices={invoices}
               onAddService={handleAddService}
               onDeleteService={handleDeleteService}
               onResetToCleanData={handleResetToCleanData}
+              onRestoreDatabase={handleRestoreDatabase}
+              onShowToast={(title, desc, type) => setToastMessage({ title, desc, type })}
             />
           )}
         </main>

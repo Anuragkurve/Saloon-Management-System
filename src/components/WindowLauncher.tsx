@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ExternalLink, Maximize2, Minimize2, Copy, Check, Monitor, Smartphone, Globe, Sparkles, X } from 'lucide-react';
+import { ExternalLink, Maximize2, Minimize2, Copy, Check, Monitor, Smartphone, Globe, Sparkles, X, Laptop } from 'lucide-react';
+import { DesktopAppGuideModal } from './DesktopAppGuideModal';
 
 interface WindowLauncherProps {
   variant?: 'header-button' | 'sidebar-item' | 'banner';
@@ -7,6 +8,7 @@ interface WindowLauncherProps {
 
 export const WindowLauncher: React.FC<WindowLauncherProps> = ({ variant = 'header-button' }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDesktopGuideOpen, setIsDesktopGuideOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isInIframe, setIsInIframe] = useState(false);
@@ -265,6 +267,34 @@ export const WindowLauncher: React.FC<WindowLauncherProps> = ({ variant = 'heade
                 </p>
               </div>
             </button>
+
+            {/* Electron Desktop App */}
+            <div className="pt-1 border-t border-slate-100">
+              <button
+                onClick={() => {
+                  setIsDesktopGuideOpen(true);
+                  setIsOpen(false);
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl bg-purple-50/80 hover:bg-purple-100/80 border border-purple-200/70 transition-colors flex items-start gap-2.5 group cursor-pointer"
+              >
+                <div className="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform shadow-xs">
+                  <Laptop className="w-4 h-4" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-purple-950 block">
+                      Electron Desktop App
+                    </span>
+                    <span className="text-[9px] bg-purple-200 text-purple-900 font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                      .EXE / .DMG
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-purple-700 mt-0.5">
+                    Pre-configured package, run & build commands.
+                  </p>
+                </div>
+              </button>
+            </div>
           </div>
 
           <div className="p-2 border-t border-slate-100 bg-slate-50/70 rounded-b-xl text-[10px] text-slate-500 flex items-center justify-between">
@@ -273,6 +303,13 @@ export const WindowLauncher: React.FC<WindowLauncherProps> = ({ variant = 'heade
           </div>
         </div>
       )}
+
+      {/* Desktop App Packaging Guide Modal */}
+      <DesktopAppGuideModal
+        isOpen={isDesktopGuideOpen}
+        onClose={() => setIsDesktopGuideOpen(false)}
+        onLaunchStandaloneWindow={handleOpenDedicatedWindow}
+      />
     </div>
   );
 };

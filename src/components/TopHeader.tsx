@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { Bell, Plus, Calendar, Sparkles, CheckCircle2, Clock, Menu } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Bell, Plus, Calendar, Sparkles, CheckCircle2, Clock, Menu, HardDrive, Laptop } from 'lucide-react';
 import { AppointmentLedgerItem, Receptionist } from '../types';
 import { WindowLauncher } from './WindowLauncher';
+import { getOfflineAvatar, handleAvatarError } from '../utils/offlineAvatars';
+import { isElectronDesktop } from '../utils/offlineBackup';
 
 interface TopHeaderProps {
   currentTabName: string;
@@ -28,6 +30,23 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showReceptionistSwitcher, setShowReceptionistSwitcher] = useState(false);
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [isElectron, setIsElectron] = useState(false);
+
+  useEffect(() => {
+    setIsElectron(isElectronDesktop());
+
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const activeReceptionist =
     receptionists.find((r) => r.id === activeReceptionistId) ||
@@ -54,6 +73,30 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
           <Calendar className="w-3.5 h-3.5 text-slate-500" />
           Today, Sep 13 • Peak Hours
         </span>
+
+        {/* Offline / Desktop Native Badge */}
+        <div
+          className={`hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 border ${
+            isElectron
+              ? 'bg-purple-50 text-purple-700 border-purple-200/80'
+              : !isOnline
+              ? 'bg-amber-50 text-amber-700 border-amber-200/80'
+              : 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
+          }`}
+          title="100% Offline Compatible. All customer records, invoices, and appointments stored locally."
+        >
+          {isElectron ? (
+            <>
+              <Laptop className="w-3 h-3 text-purple-600 shrink-0" />
+              <span>Desktop App Mode</span>
+            </>
+          ) : (
+            <>
+              <span className={`w-1.5 h-1.5 rounded-full ${!isOnline ? 'bg-amber-500' : 'bg-emerald-500'} animate-pulse`} />
+              <span>{!isOnline ? 'Offline Mode (Local Data)' : 'Offline Ready'}</span>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
@@ -99,11 +142,9 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
           >
             <div className="relative">
               <img
-                src={
-                  activeReceptionist?.avatar ||
-                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'
-                }
+                src={activeReceptionist?.avatar || getOfflineAvatar(activeReceptionist?.name || 'Receptionist', 'rec')}
                 alt={activeReceptionist?.name || 'Receptionist'}
+                onError={(e) => handleAvatarError(e, activeReceptionist?.name || 'Receptionist')}
                 className="w-9 h-9 rounded-full object-cover ring-2 ring-purple-500/30"
               />
               <span
@@ -152,8 +193,9 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                       }`}
                     >
                       <img
-                        src={rec.avatar}
+                        src={rec.avatar || getOfflineAvatar(rec.name, 'rec')}
                         alt={rec.name}
+                        onError={(e) => handleAvatarError(e, rec.name)}
                         className="w-8 h-8 rounded-full object-cover ring-1 ring-slate-200"
                       />
                       <div className="flex-1 min-w-0">

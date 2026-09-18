@@ -1,4 +1,5 @@
 import { Customer, Staff, Receptionist, ServiceItem, AppointmentLedgerItem, MarketingCampaign, Invoice } from '../types';
+import { getOfflineAvatar } from '../utils/offlineAvatars';
 
 export const INITIAL_RECEPTIONISTS: Receptionist[] = [
   {
@@ -6,7 +7,7 @@ export const INITIAL_RECEPTIONISTS: Receptionist[] = [
     name: 'Sarah Jenkins',
     phone: '+91 98111 22334',
     email: 'sarah.reception@houseofhair.com',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    avatar: getOfflineAvatar('Sarah Jenkins', 'rec1'),
     deskNumber: 'Front Desk #1 (Main)',
     shift: 'Morning (8:30 AM - 2:30 PM)',
     status: 'active',
@@ -18,7 +19,7 @@ export const INITIAL_RECEPTIONISTS: Receptionist[] = [
     name: 'Priya Sharma',
     phone: '+91 98222 33445',
     email: 'priya.reception@houseofhair.com',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+    avatar: getOfflineAvatar('Priya Sharma', 'rec2'),
     deskNumber: 'VIP Concierge Desk #2',
     shift: 'Evening (2:00 PM - 8:30 PM)',
     status: 'active',
@@ -32,7 +33,7 @@ export const INITIAL_STAFF: Staff[] = [
     id: 'staff-1',
     name: 'Sarah Jenkins',
     role: 'Senior Master Stylist & Colorist',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    avatar: getOfflineAvatar('Sarah Jenkins', 'stylist1'),
     status: 'active',
     rating: 4.9,
     servicesToday: 1,
@@ -91,7 +92,7 @@ export const INITIAL_CUSTOMERS: Customer[] = [
     name: 'Pooja Sharma',
     phone: '+91 98765 43210',
     email: 'pooja.sharma@example.com',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+    avatar: getOfflineAvatar('Pooja Sharma', 'client1'),
     totalVisits: 1,
     totalSpent: 1500,
     lastVisit: 'Today',
@@ -110,11 +111,11 @@ export const INITIAL_LEDGER: AppointmentLedgerItem[] = [
     id: 'ledg-1',
     staffId: 'staff-1',
     staffName: 'Sarah Jenkins',
-    staffAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    staffAvatar: getOfflineAvatar('Sarah Jenkins', 'stylist1'),
     customerId: 'cust-1',
     customerName: 'Pooja Sharma',
     customerPhone: '+91 98765 43210',
-    customerAvatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+    customerAvatar: getOfflineAvatar('Pooja Sharma', 'client1'),
     service: 'Haircut & Styling',
     time: '11:00 AM',
     date: 'Today',
