@@ -10,9 +10,11 @@ import {
   Scissors,
   Sparkles,
   CalendarDays,
+  IndianRupee,
   X
 } from 'lucide-react';
 import { WindowLauncher } from './WindowLauncher';
+import { formatINR } from '../utils/format';
 
 export type NavTab = 'dashboard' | 'appointments' | 'customers' | 'staff' | 'billing' | 'offers' | 'reports' | 'settings';
 
@@ -21,6 +23,7 @@ interface SidebarProps {
   setActiveTab: (tab: NavTab) => void;
   pendingAppointmentsCount: number;
   activeStaffCount?: number;
+  totalSales?: number;
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
 }
@@ -30,6 +33,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setActiveTab,
   pendingAppointmentsCount,
   activeStaffCount = 1,
+  totalSales = 0,
   isOpenMobile = false,
   onCloseMobile,
 }) => {
@@ -122,6 +126,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Footer Info Box */}
         <div className="p-4 border-t border-slate-800/80 bg-[#0f121d] space-y-2">
+          {/* Real-time Sales Live Indicator */}
+          <div className="bg-slate-800/50 rounded-xl p-2.5 border border-slate-700/60 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                <IndianRupee className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <div className="text-[10px] text-slate-400 font-medium">Real-Time Sales</div>
+                <div className="text-xs font-bold text-white tracking-tight">
+                  {formatINR(totalSales, true)}
+                </div>
+              </div>
+            </div>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" title="Real-time synchronized" />
+          </div>
+
           <div className="bg-slate-800/40 rounded-xl p-3 border border-slate-700/50">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[11px] text-slate-400 font-medium">Salon Shift</span>

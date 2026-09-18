@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Receipt, Search, Printer, CheckCircle2, Download, CreditCard, Banknote, Smartphone } from 'lucide-react';
+import { Receipt, Search, Printer, CheckCircle2, Download, CreditCard, Banknote, Smartphone, Trash2, AlertTriangle, X } from 'lucide-react';
 import { Invoice } from '../types';
 
 interface BillingViewProps {
   invoices: Invoice[];
   onOpenQuickBilling: () => void;
+  onDeleteInvoice?: (invoiceId: string) => void;
 }
 
-export const BillingView: React.FC<BillingViewProps> = ({ invoices, onOpenQuickBilling }) => {
+export const BillingView: React.FC<BillingViewProps> = ({ invoices, onOpenQuickBilling, onDeleteInvoice }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [invoiceToDelete, setInvoiceToDelete] = useState<Invoice | null>(null);
 
   const filteredInvoices = invoices.filter(
     (inv) =>
@@ -106,13 +108,26 @@ export const BillingView: React.FC<BillingViewProps> = ({ invoices, onOpenQuickB
                     ₹{inv.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </td>
                   <td className="py-3 px-3 text-right">
-                    <button
-                      onClick={() => setSelectedInvoice(inv)}
-                      className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-[11px] font-semibold transition-colors inline-flex items-center gap-1"
-                    >
-                      <Printer className="w-3 h-3" />
-                      View
-                    </button>
+                    <div className="inline-flex items-center justify-end gap-1.5">
+                      <button
+                        onClick={() => setSelectedInvoice(inv)}
+                        className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-[11px] font-semibold transition-colors inline-flex items-center gap-1"
+                        title="View Receipt"
+                      >
+                        <Printer className="w-3 h-3" />
+                        <span>View</span>
+                      </button>
+                      {onDeleteInvoice && (
+                        <button
+                          onClick={() => setInvoiceToDelete(inv)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                          title={`Delete invoice ${inv.invoiceNumber}`}
+                          aria-label={`Delete invoice ${inv.invoiceNumber}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -120,6 +135,61 @@ export const BillingView: React.FC<BillingViewProps> = ({ invoices, onOpenQuickB
           </table>
         </div>
       </div>
+
+      {/* Delete Invoice Confirmation Modal */}
+      {invoiceToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5 text-rose-600">
+                <div className="w-8 h-8 rounded-xl bg-rose-50 flex items-center justify-center">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">Void / Delete Invoice</h3>
+              </div>
+              <button
+                onClick={() => setInvoiceToDelete(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="py-4 space-y-3">
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Are you sure you want to void and delete invoice <strong className="text-slate-900 font-mono">{invoiceToDelete.invoiceNumber}</strong> for{' '}
+                <strong className="text-slate-900">{invoiceToDelete.customerName}</strong> of{' '}
+                <strong className="text-rose-600">₹{invoiceToDelete.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong>?
+              </p>
+              <div className="p-3 bg-rose-50/80 rounded-xl border border-rose-200/80 text-[11px] text-rose-700">
+                ⚠️ Your Total Sales will update automatically in real-time across your registers and Overview cards.
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setInvoiceToDelete(null)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onDeleteInvoice) {
+                    onDeleteInvoice(invoiceToDelete.id);
+                  }
+                  setInvoiceToDelete(null);
+                }}
+                className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 active:bg-rose-800 rounded-xl shadow-xs transition-colors"
+              >
+                Delete Invoice
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Invoice Receipt Preview Modal */}
       {selectedInvoice && (

@@ -113,6 +113,7 @@ export default function App() {
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [pendingInvoice, setPendingInvoice] = useState<Omit<Invoice, 'id' | 'invoiceNumber' | 'date' | 'time' | 'status'> | null>(null);
+  const [billingAppointmentId, setBillingAppointmentId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<{ title: string; desc: string; type?: 'success' | 'info' } | null>(null);
 
   // Auto-dismiss toast after 4 seconds
@@ -180,13 +181,52 @@ export default function App() {
   };
 
   // Handlers
-  const handleOpenPayment = (inv: Omit<Invoice, 'id' | 'invoiceNumber' | 'date' | 'time' | 'status'>) => {
+  const handleOpenPayment = (
+    inv: Omit<Invoice, 'id' | 'invoiceNumber' | 'date' | 'time' | 'status'>,
+    appointmentId?: string
+  ) => {
     setPendingInvoice(inv);
+    setBillingAppointmentId(appointmentId || null);
     setIsPaymentModalOpen(true);
+  };
+
+  const handleBillAppointment = (item: AppointmentLedgerItem) => {
+    const matchedCustomer = customers.find((c) => c.id === item.customerId || c.name === item.customerName);
+    const pendingInv: Omit<Invoice, 'id' | 'invoiceNumber' | 'date' | 'time' | 'status'> = {
+      customerId: item.customerId,
+      customerName: item.customerName,
+      customerPhone: item.customerPhone || matchedCustomer?.phone || '+91 99999 00000',
+      staffId: item.staffId,
+      staffName: item.staffName,
+      services: [{ name: item.service, price: item.price }],
+      subtotal: item.price,
+      discount: 0,
+      tax: Math.round(item.price * 0.18),
+      total: item.price + Math.round(item.price * 0.18),
+      paymentMethod: 'Credit Card',
+    };
+    handleOpenPayment(pendingInv, item.id);
   };
 
   const handleCompletePayment = (finalInvoice: Invoice) => {
     setInvoices((prev) => [finalInvoice, ...prev]);
+
+    // If payment was generated from a booked appointment, update that appointment to Paid & Completed
+    if (billingAppointmentId) {
+      setLedgerItems((prev) =>
+        prev.map((item) => {
+          if (item.id === billingAppointmentId) {
+            return {
+              ...item,
+              status: 'Completed',
+              paymentStatus: 'Paid',
+            };
+          }
+          return item;
+        })
+      );
+      setBillingAppointmentId(null);
+    }
 
     // Update customer total spend & visit, or auto-save new billed client
     setCustomers((prev) => {
@@ -395,6 +435,46 @@ export default function App() {
     });
   };
 
+  const handleDeleteInvoice = (invoiceId: string) => {
+    const target = invoices.find((inv) => inv.id === invoiceId);
+    setInvoices((prev) => prev.filter((inv) => inv.id !== invoiceId));
+    if (target) {
+      // Revert customer lifetime spend and visit if applicable
+      setCustomers((prev) =>
+        prev.map((c) => {
+          if (c.id === target.customerId || c.name === target.customerName) {
+            return {
+              ...c,
+              totalVisits: Math.max(0, c.totalVisits - 1),
+              totalSpent: Math.max(0, c.totalSpent - target.total),
+            };
+          }
+          return c;
+        })
+      );
+      // Revert staff revenue if applicable
+      setStaffList((prev) =>
+        prev.map((s) => {
+          if (s.id === target.staffId) {
+            return {
+              ...s,
+              servicesToday: Math.max(0, s.servicesToday - 1),
+              totalRevenueToday: Math.max(0, s.totalRevenueToday - target.total),
+            };
+          }
+          return s;
+        })
+      );
+    }
+    setToastMessage({
+      title: 'Invoice Voided & Deleted',
+      desc: target
+        ? `Invoice ${target.invoiceNumber} (₹${target.total}) was removed. Total Sales updated in real-time.`
+        : 'Invoice removed successfully.',
+      type: 'info',
+    });
+  };
+
   const handleAddStaff = (newStaff: Staff) => {
     setStaffList((prev) => [...prev, newStaff]);
   };
@@ -502,6 +582,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         pendingAppointmentsCount={ledgerItems.filter((l) => l.status === 'Scheduled').length}
         activeStaffCount={activeStaffCount}
+        totalSales={currentTotalSales}
         isOpenMobile={isMobileMenuOpen}
         onCloseMobile={() => setIsMobileMenuOpen(false)}
       />
@@ -516,6 +597,7 @@ export default function App() {
           onOpenBookingModal={() => setIsBookingModalOpen(true)}
           onOpenCustomerModal={() => setIsAddCustomerModalOpen(true)}
           upcomingAppointments={ledgerItems.filter((l) => l.status === 'Scheduled' || l.status === 'In Progress')}
+          totalSales={currentTotalSales}
           onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           receptionists={receptionists}
           activeReceptionistId={activeReceptionistId}
@@ -545,6 +627,7 @@ export default function App() {
                     onUpdateStatus={handleUpdateLedgerStatus}
                     onOpenBookingModal={() => setIsBookingModalOpen(true)}
                     onDeleteAppointment={handleDeleteAppointment}
+                    onBillAppointment={handleBillAppointment}
                   />
                 </div>
 
@@ -582,6 +665,7 @@ export default function App() {
               onOpenBookingModal={() => setIsBookingModalOpen(true)}
               onUpdateStatus={handleUpdateLedgerStatus}
               onDeleteAppointment={handleDeleteAppointment}
+              onBillAppointment={handleBillAppointment}
             />
           )}
 
@@ -620,6 +704,7 @@ export default function App() {
               onOpenQuickBilling={() => {
                 setActiveTab('dashboard');
               }}
+              onDeleteInvoice={handleDeleteInvoice}
             />
           )}
 

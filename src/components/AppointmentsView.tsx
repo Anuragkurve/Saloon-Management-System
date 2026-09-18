@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, Plus, Check, Play, Search, Filter, Trash2, AlertTriangle, X } from 'lucide-react';
+import { Calendar, Clock, Plus, Check, Play, Search, Filter, Trash2, AlertTriangle, X, UserCheck, Scissors, CreditCard } from 'lucide-react';
 import { AppointmentLedgerItem } from '../types';
 
 interface AppointmentsViewProps {
@@ -7,6 +7,7 @@ interface AppointmentsViewProps {
   onOpenBookingModal: () => void;
   onUpdateStatus: (id: string, newStatus: AppointmentLedgerItem['status']) => void;
   onDeleteAppointment: (id: string) => void;
+  onBillAppointment?: (item: AppointmentLedgerItem) => void;
 }
 
 export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
@@ -14,8 +15,9 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
   onOpenBookingModal,
   onUpdateStatus,
   onDeleteAppointment,
+  onBillAppointment,
 }) => {
-  const [filterStatus, setFilterStatus] = useState<'All' | 'Scheduled' | 'In Progress' | 'Completed'>('All');
+  const [filterStatus, setFilterStatus] = useState<'All' | 'Scheduled' | 'Boarded' | 'In Progress' | 'Completed'>('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [appointmentToDelete, setAppointmentToDelete] = useState<AppointmentLedgerItem | null>(null);
 
@@ -59,12 +61,12 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
             <Search className="w-4 h-4 text-slate-400 absolute left-2.5 top-2.5" />
           </div>
 
-          <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-semibold">
-            {(['All', 'Scheduled', 'In Progress', 'Completed'] as const).map((status) => (
+          <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-semibold overflow-x-auto">
+            {(['All', 'Scheduled', 'Boarded', 'In Progress', 'Completed'] as const).map((status) => (
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
+                className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
                   filterStatus === status ? 'bg-white text-slate-900 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -135,18 +137,32 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                     </td>
                     <td className="py-3 px-3">
                       {app.status === 'Completed' && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
+                          <Check className="w-3 h-3" />
                           Completed
                         </span>
                       )}
                       {app.status === 'In Progress' && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse inline-flex items-center gap-1">
+                          <Scissors className="w-3 h-3" />
                           In Chair
                         </span>
                       )}
+                      {app.status === 'Boarded' && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 inline-flex items-center gap-1">
+                          <UserCheck className="w-3 h-3" />
+                          Boarded
+                        </span>
+                      )}
                       {app.status === 'Scheduled' && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200 inline-flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
                           Scheduled
+                        </span>
+                      )}
+                      {app.status === 'Cancelled' && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-50 text-rose-700 border border-rose-200">
+                          Cancelled
                         </span>
                       )}
                     </td>
@@ -157,22 +173,51 @@ export const AppointmentsView: React.FC<AppointmentsViewProps> = ({
                       <div className="inline-flex items-center justify-end gap-1.5">
                         {app.status === 'Scheduled' && (
                           <button
-                            onClick={() => onUpdateStatus(app.id, 'In Progress')}
-                            className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-md font-semibold text-[11px] transition-colors"
+                            onClick={() => onUpdateStatus(app.id, 'Boarded')}
+                            className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md font-bold text-[11px] transition-colors inline-flex items-center gap-1"
+                            title="Mark client arrived at salon"
                           >
-                            Seat Client
+                            <UserCheck className="w-3 h-3" />
+                            <span>Customer Boarded</span>
+                          </button>
+                        )}
+                        {app.status === 'Boarded' && (
+                          <button
+                            onClick={() => onUpdateStatus(app.id, 'In Progress')}
+                            className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-md font-bold text-[11px] transition-colors inline-flex items-center gap-1"
+                            title="Seat client in chair"
+                          >
+                            <Scissors className="w-3 h-3" />
+                            <span>Seat In Chair</span>
                           </button>
                         )}
                         {app.status === 'In Progress' && (
                           <button
                             onClick={() => onUpdateStatus(app.id, 'Completed')}
-                            className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-md font-semibold text-[11px] transition-colors"
+                            className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-md font-bold text-[11px] transition-colors inline-flex items-center gap-1"
+                            title="Complete appointment"
                           >
-                            Complete
+                            <Check className="w-3 h-3" />
+                            <span>Appointment Completed</span>
                           </button>
                         )}
                         {app.status === 'Completed' && (
-                          <span className="text-[11px] text-emerald-600 font-semibold px-1">Done</span>
+                          <div className="inline-flex items-center gap-1">
+                            {app.paymentStatus === 'Paid' ? (
+                              <span className="text-[11px] text-emerald-600 font-bold px-1.5 py-0.5 bg-emerald-50 rounded">Paid</span>
+                            ) : onBillAppointment ? (
+                              <button
+                                onClick={() => onBillAppointment(app)}
+                                className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-md font-bold text-[11px] transition-colors inline-flex items-center gap-1"
+                                title="Process payment & bill"
+                              >
+                                <CreditCard className="w-3 h-3" />
+                                <span>Bill Now</span>
+                              </button>
+                            ) : (
+                              <span className="text-[11px] text-slate-400 font-semibold px-1">Done</span>
+                            )}
+                          </div>
                         )}
 
                         <button

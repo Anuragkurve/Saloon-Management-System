@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Plus, Calendar, Sparkles, CheckCircle2, Clock, Menu, HardDrive, Laptop } from 'lucide-react';
+import { Bell, Plus, Calendar, Sparkles, CheckCircle2, Clock, Menu, HardDrive, Laptop, IndianRupee } from 'lucide-react';
 import { AppointmentLedgerItem, Receptionist } from '../types';
 import { WindowLauncher } from './WindowLauncher';
 import { getOfflineAvatar, handleAvatarError } from '../utils/offlineAvatars';
 import { isElectronDesktop } from '../utils/offlineBackup';
+import { formatINR } from '../utils/format';
 
 interface TopHeaderProps {
   currentTabName: string;
   onOpenBookingModal: () => void;
   onOpenCustomerModal: () => void;
   upcomingAppointments: AppointmentLedgerItem[];
+  totalSales?: number;
   onToggleMobileMenu?: () => void;
   receptionists?: Receptionist[];
   activeReceptionistId?: string;
@@ -22,6 +24,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
   onOpenBookingModal,
   onOpenCustomerModal,
   upcomingAppointments,
+  totalSales = 0,
   onToggleMobileMenu,
   receptionists = [],
   activeReceptionistId,
@@ -73,6 +76,17 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
           <Calendar className="w-3.5 h-3.5 text-slate-500" />
           Today, Sep 13 • Peak Hours
         </span>
+
+        {/* Real-time Sales Live Badge */}
+        <div
+          id="header-live-sales-badge"
+          className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shrink-0 bg-emerald-50 text-emerald-800 border border-emerald-200/80 shadow-2xs"
+          title="Real-time salon sales tally. Updates instantly upon billing, appointments, or edits."
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-slate-500 font-medium">Sales:</span>
+          <span className="font-extrabold text-emerald-900">{formatINR(totalSales, true)}</span>
+        </div>
 
         {/* Offline / Desktop Native Badge */}
         <div

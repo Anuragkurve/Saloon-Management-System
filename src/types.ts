@@ -65,7 +65,7 @@ export interface AppointmentLedgerItem {
   service: string;
   time: string;
   date: string;
-  status: 'Completed' | 'In Progress' | 'Scheduled' | 'Waiting' | 'Cancelled';
+  status: 'Scheduled' | 'Boarded' | 'In Progress' | 'Completed' | 'Cancelled';
   price: number;
   notes?: string;
   paymentStatus: 'Paid' | 'Unpaid';

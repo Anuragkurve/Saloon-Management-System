@@ -36,14 +36,95 @@ if (!gotTheLock) {
 
     // Determine load target (dev server or production build dist/index.html)
     const devUrl = process.env.ELECTRON_START_URL;
+    const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
 
     if (devUrl) {
-      mainWindow.loadURL(devUrl);
-    } else {
-      const indexPath = path.join(__dirname, '..', 'dist', 'index.html');
-      mainWindow.loadFile(indexPath).catch(() => {
-        // Fallback to localhost:3000 if dist is not yet built
+      mainWindow.loadURL(devUrl).catch(() => {
         mainWindow.loadURL('http://localhost:3000');
+      });
+    } else if (fs.existsSync(indexPath)) {
+      mainWindow.loadFile(indexPath);
+    } else {
+      // If dist folder is not compiled yet, attempt to connect to Vite dev server, or display a helpful onboarding screen
+      mainWindow.loadURL('http://localhost:3000').catch(() => {
+        const errorHtml = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <title>House of Hairs Saloon - Quick Setup</title>
+              <style>
+                body {
+                  margin: 0;
+                  padding: 40px;
+                  background-color: #0f172a;
+                  color: #f8fafc;
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  min-height: 85vh;
+                }
+                .card {
+                  max-width: 580px;
+                  background: #1e293b;
+                  border: 1px solid #334155;
+                  border-radius: 16px;
+                  padding: 32px;
+                  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+                }
+                h1 { margin: 0 0 12px; font-size: 22px; color: #a855f7; }
+                p { margin: 0 0 16px; font-size: 14px; line-height: 1.6; color: #cbd5e1; }
+                code {
+                  background: #090d16;
+                  padding: 3px 8px;
+                  border-radius: 6px;
+                  color: #38bdf8;
+                  font-family: monospace;
+                  font-size: 13px;
+                }
+                .cmd-box {
+                  background: #090d16;
+                  border: 1px solid #1e293b;
+                  border-radius: 8px;
+                  padding: 14px;
+                  margin: 16px 0;
+                  font-family: monospace;
+                  font-size: 13px;
+                  color: #4ade80;
+                }
+                .btn {
+                  display: inline-block;
+                  background: #9333ea;
+                  color: #fff;
+                  border: none;
+                  padding: 10px 18px;
+                  border-radius: 8px;
+                  font-weight: 600;
+                  cursor: pointer;
+                  margin-top: 10px;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="card">
+                <h1>Salon Files Need Building First</h1>
+                <p>The desktop app couldn't find the compiled <code>dist/index.html</code> file on your computer.</p>
+                <p>Please run the following command in your terminal inside the project folder:</p>
+                <div class="cmd-box">
+                  npm run build<br>
+                  npm run electron
+                </div>
+                <p>Or if you want to run with live hot-reloading development server:</p>
+                <div class="cmd-box">
+                  npm run dev:desktop
+                </div>
+                <button class="btn" onclick="location.reload()">Reload App</button>
+              </div>
+            </body>
+          </html>
+        `;
+        mainWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(errorHtml)}`);
       });
     }
 
