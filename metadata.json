@@ -1,0 +1,6 @@
+{
+  "name": "House of Hairs Saloon",
+  "description": "Appointment booking, live staff service ledger, client profile management, and quick billing software for House of Hairs Saloon.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
